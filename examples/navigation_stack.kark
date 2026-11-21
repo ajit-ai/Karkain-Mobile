@@ -1,0 +1,14 @@
+// Karkain-Mobile runnable example: navigate a screen stack.
+import mobile
+
+func main() {
+    let nav = new_nav()
+    nav = push_screen(nav, "splash")
+    nav = push_screen(nav, "home")
+    nav = push_screen(nav, "settings")
+
+    println(describe_nav(nav))
+    println("back=" + str(can_go_back(nav)))
+    nav = pop_screen(nav)
+    println(describe_nav(nav))
+}

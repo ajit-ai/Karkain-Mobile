@@ -1,0 +1,69 @@
+// Karkain-Mobile - mobile navigation and application infrastructure.
+// Karkain Language v1.2.0 verified baseline (tag v1.2.0,
+// commit 77d70693e1e3134dac312a303bffafa7d50fa988).
+//
+// Scope boundary: this framework models a navigation stack in portable
+// Karkain. It does not create mobile views, handle touch events or target
+// Android/iOS; no platform support is claimed.
+//
+// Navigation representation: an array of screen names, bottom to top.
+
+// new_nav returns an empty navigation stack.
+public func new_nav() {
+    return []
+}
+
+// push_screen pushes a screen onto the stack.
+public func push_screen(nav, name) {
+    return push(nav, name)
+}
+
+// pop_screen removes the top screen.
+public func pop_screen(nav) {
+    if len(nav) == 0 {
+        return nav
+    }
+    let out = []
+    let i = 0
+    while (i < len(nav) - 1) {
+        out = push(out, nav[i])
+        i = i + 1
+    }
+    return out
+}
+
+// current_screen returns the top screen name or "".
+public func current_screen(nav) {
+    if len(nav) == 0 {
+        return ""
+    }
+    return nav[len(nav) - 1]
+}
+
+// nav_depth returns the number of stacked screens.
+public func nav_depth(nav) {
+    return len(nav)
+}
+
+// screen_at returns the screen at an index or "".
+public func screen_at(nav, n) {
+    if n < len(nav) {
+        return nav[n]
+    }
+    return ""
+}
+
+// can_go_back reports whether there is a previous screen to return to.
+public func can_go_back(nav) {
+    return len(nav) > 1
+}
+
+// clear_nav empties the navigation stack.
+public func clear_nav(nav) {
+    return []
+}
+
+// describe_nav builds a one-line navigation diagnostic.
+public func describe_nav(nav) {
+    return "depth=" + str(nav_depth(nav)) + " current=" + current_screen(nav)
+}

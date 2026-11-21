@@ -1,0 +1,7 @@
+name = "karkain-mobile"
+version = "0.1.0-dev"
+description = "Navigation stack infrastructure for Karkain mobile applications"
+license = "MIT"
+targets = ["native"]
+
+[dependencies]

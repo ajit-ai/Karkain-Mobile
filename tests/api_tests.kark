@@ -1,0 +1,54 @@
+// Native tests for Karkain-Mobile.
+
+func sample_nav() {
+    let n = push_screen(new_nav(), "home")
+    n = push_screen(n, "detail")
+    return push_screen(n, "settings")
+}
+
+func test_new_nav() {
+    let n = new_nav()
+    assert_eq(nav_depth(n), 0)
+    assert_eq(current_screen(n), "")
+}
+
+func test_push_screen() {
+    let n = push_screen(new_nav(), "home")
+    assert_eq(nav_depth(n), 1)
+    assert_eq(current_screen(n), "home")
+}
+
+func test_current_screen() {
+    let n = sample_nav()
+    assert_eq(current_screen(n), "settings")
+    assert_eq(screen_at(n, 0), "home")
+    assert_eq(screen_at(n, 2), "settings")
+    assert_eq(screen_at(n, 9), "")
+}
+
+func test_pop_screen() {
+    let n = pop_screen(sample_nav())
+    assert_eq(nav_depth(n), 2)
+    assert_eq(current_screen(n), "detail")
+}
+
+func test_pop_empty() {
+    let n = pop_screen(new_nav())
+    assert_eq(nav_depth(n), 0)
+}
+
+func test_can_go_back() {
+    assert(can_go_back(sample_nav()))
+    assert(can_go_back(push_screen(new_nav(), "home")) == false)
+    assert(can_go_back(new_nav()) == false)
+}
+
+func test_clear_nav() {
+    let n = clear_nav(sample_nav())
+    assert_eq(nav_depth(n), 0)
+    assert_eq(nav_depth(sample_nav()), 3)
+}
+
+func test_describe_nav() {
+    assert_eq(describe_nav(sample_nav()), "depth=3 current=settings")
+}

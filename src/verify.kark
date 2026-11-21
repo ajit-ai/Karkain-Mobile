@@ -1,0 +1,13 @@
+// Integration verification for the Karkain-Mobile public API.
+import mobile
+
+func main() {
+    let nav = push_screen(push_screen(new_nav(), "home"), "profile")
+    assert_eq(nav_depth(nav), 2)
+    assert_eq(current_screen(nav), "profile")
+    println(describe_nav(nav))
+
+    let back = pop_screen(nav)
+    assert_eq(current_screen(back), "home")
+    assert(can_go_back(back) == false)
+}
