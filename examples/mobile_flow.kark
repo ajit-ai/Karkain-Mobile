@@ -1,0 +1,22 @@
+// Karkain-Mobile Phase 2 example: app lifecycle, routes and sync models.
+import mobile
+
+func main() {
+    let app = launch_app(new_mobile_app("a1", "Demo"))
+    println("state=" + mobile_state(app))
+
+    let routes = register_route(new_routes(), "detail", "DetailScreen")
+    let nav = push_route(new_nav(), "detail", "id=7")
+    println("screen=" + route_screen(routes, route_name(current_screen(nav))))
+    println("param=" + route_param(current_screen(nav)))
+    println("back=" + str(can_go_back(nav)))
+
+    let perms = grant_permission(new_permissions(), "camera")
+    println("camera=" + str(is_granted(perms, "camera")))
+
+    let sync = set_offline(new_sync_state())
+    println("offline=" + str(is_offline(sync)))
+
+    let platform = new_platform("test", "1", "camera")
+    println("native_camera=" + str(platform_supports(platform, "camera")))
+}

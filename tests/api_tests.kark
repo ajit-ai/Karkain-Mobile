@@ -52,3 +52,96 @@ func test_clear_nav() {
 func test_describe_nav() {
     assert_eq(describe_nav(sample_nav()), "depth=3 current=settings")
 }
+
+// --- Phase 2 regression ---
+
+func test_phase1_regression() {
+    let nav = push_screen(push_screen(new_nav(), "home"), "detail")
+    assert_eq(nav_depth(nav), 2)
+    assert_eq(current_screen(nav), "detail")
+    assert(can_go_back(nav))
+    assert_eq(current_screen(pop_screen(nav)), "home")
+}
+
+// --- Phase 2 additions ---
+
+func test_mobile_lifecycle() {
+    let app = launch_app(new_mobile_app("a1", "Demo"))
+    assert_eq(mobile_app_id(app), "a1")
+    assert_eq(mobile_app_name(app), "Demo")
+    assert_eq(mobile_state(app), "active")
+    assert_eq(mobile_state(pause_app(app)), "paused")
+    assert_eq(mobile_state(resume_app(pause_app(app))), "active")
+    assert_eq(mobile_state(foreground_app(background_app(app))), "active")
+    assert_eq(mobile_state(terminate_app(app)), "terminated")
+}
+
+func test_routes() {
+    let r = register_route(register_route(new_routes(), "home", "HomeScreen"), "detail", "DetailScreen")
+    assert_eq(route_count(r), 2)
+    assert(route_registered(r, "home"))
+    assert(route_registered(r, "none") == false)
+    assert_eq(route_screen(r, "detail"), "DetailScreen")
+    let replaced = register_route(r, "home", "NewHome")
+    assert_eq(route_count(replaced), 2)
+    assert_eq(route_screen(replaced, "home"), "NewHome")
+}
+
+func test_route_parameters() {
+    let nav = push_route(new_nav(), "detail", "id=42")
+    assert_eq(route_name(current_screen(nav)), "detail")
+    assert_eq(route_param(current_screen(nav)), "id=42")
+    assert_eq(route_name("home"), "home")
+    assert_eq(route_param("home"), "")
+}
+
+func test_nav_events_and_screens() {
+    let e = nav_event(nav_event(new_nav_events(), "push", "home"), "pop", "home")
+    assert_eq(nav_event_count(e), 2)
+    let screen = set_screen_state(new_screen_state("home"), "active")
+    assert_eq(screen_state(screen), "active")
+    assert_eq(screen_state(new_screen_state("home")), "created")
+}
+
+func test_device_services() {
+    let camera = new_device_service("camera", "capture,flash")
+    assert(device_supports(camera, "capture"))
+    assert(device_supports(camera, "network") == false)
+    assert_eq(camera_contract(), "device.camera.capture()")
+    assert_eq(location_contract(), "device.location.current()")
+    assert_eq(notification_contract(), "device.notify(title,message)")
+    assert_eq(permission_contract(), "device.permission.request(name)")
+    assert_eq(storage_contract(), "device.secure_storage.read/write")
+    assert_eq(background_contract(), "device.background.schedule(task)")
+    assert_eq(network_status_contract(), "device.network.status()")
+}
+
+func test_permissions() {
+    let p = grant_permission(deny_permission(new_permissions(), "camera"), "location")
+    assert(is_granted(p, "location"))
+    assert(is_granted(p, "camera") == false)
+    assert(is_granted(p, "none") == false)
+    let flipped = grant_permission(p, "camera")
+    assert(is_granted(flipped, "camera"))
+}
+
+func test_offline_and_changesets() {
+    let s = set_offline(new_sync_state())
+    assert(is_offline(s))
+    assert(is_offline(set_online(s)) == false)
+    let c = add_change(add_change(new_changeset("c1"), "a"), "b")
+    assert_eq(change_count(c), 2)
+    assert_eq(change_count(new_changeset("c2")), 0)
+    let conflict = new_conflict("x", "version")
+    assert_eq(conflict[1], "version")
+    assert_eq(policy_retry(sync_policy("sync", 3)), 3)
+}
+
+func test_platform_metadata() {
+    let p = new_platform("android", "14", "camera,location")
+    assert(platform_supports(p, "camera"))
+    assert(platform_supports(p, "bluetooth") == false)
+    assert_eq(android_contract(), "android.sdk.build_and_run")
+    assert_eq(ios_contract(), "ios.xcode.build_and_run")
+    assert_eq(ui_screen_contract(), "ui.screen.compose(screen,components)")
+}

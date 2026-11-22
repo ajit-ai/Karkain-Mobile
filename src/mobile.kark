@@ -67,3 +67,351 @@ public func clear_nav(nav) {
 public func describe_nav(nav) {
     return "depth=" + str(nav_depth(nav)) + " current=" + current_screen(nav)
 }
+
+// ---------------------------------------------------------------------------
+// Phase 2 additions. Phase 1 navigation API is unchanged. Device services,
+// Android/iOS deployment and secure storage are BLOCKED: no SDK, native
+// bridge or platform execution is available in the verified environment.
+
+// new_mobile_app creates an app model in the created state.
+public func new_mobile_app(id, name) {
+    let a = []
+    a = push(a, id)
+    a = push(a, name)
+    a = push(a, "created")
+    return a
+}
+
+// mobile_app_id returns an app id.
+public func mobile_app_id(app) { return app[0] }
+
+// mobile_app_name returns an app name.
+public func mobile_app_name(app) { return app[1] }
+
+// mobile_state returns an app lifecycle state.
+public func mobile_state(app) { return app[2] }
+
+// set_mobile_state records a lifecycle state.
+public func set_mobile_state(app, state) {
+    let out = []
+    out = push(out, app[0])
+    out = push(out, app[1])
+    out = push(out, state)
+    return out
+}
+
+// launch_app moves an app to active.
+public func launch_app(app) { return set_mobile_state(app, "active") }
+
+// pause_app moves an active app to paused.
+public func pause_app(app) {
+    if mobile_state(app) == "active" { return set_mobile_state(app, "paused") }
+    return app
+}
+
+// resume_app moves a paused app to active.
+public func resume_app(app) {
+    if mobile_state(app) == "paused" { return set_mobile_state(app, "active") }
+    return app
+}
+
+// background_app moves an app to background.
+public func background_app(app) { return set_mobile_state(app, "background") }
+
+// foreground_app moves a background app to active.
+public func foreground_app(app) {
+    if mobile_state(app) == "background" { return set_mobile_state(app, "active") }
+    return app
+}
+
+// terminate_app moves an app to terminated.
+public func terminate_app(app) { return set_mobile_state(app, "terminated") }
+
+// new_routes creates an empty route registry.
+public func new_routes() {
+    return []
+}
+
+// register_route maps a route name to a screen.
+public func register_route(routes, name, screen) {
+    let out = register_route_replace(routes, name, screen)
+    return out
+}
+
+// register_route_replace adds or replaces a route mapping.
+public func register_route_replace(routes, name, screen) {
+    let out = []
+    out = push(out, name)
+    out = push(out, screen)
+    let i = 0
+    while (i < len(routes)) {
+        if routes[i] == name {
+            i = i + 2
+        } else {
+            out = push(out, routes[i])
+            out = push(out, routes[i + 1])
+            i = i + 2
+        }
+    }
+    return out
+}
+
+// route_screen returns the screen for a route or "".
+public func route_screen(routes, name) {
+    let i = 0
+    while (i < len(routes)) {
+        if routes[i] == name { return routes[i + 1] }
+        i = i + 2
+    }
+    return ""
+}
+
+// route_registered reports whether a route exists.
+public func route_registered(routes, name) {
+    return route_screen(routes, name) != ""
+}
+
+// route_count returns the number of registered routes.
+public func route_count(routes) { return len(routes) / 2 }
+
+// push_route pushes a route entry with an optional parameter.
+public func push_route(nav, name, param) {
+    let entry = name
+    if len(param) > 0 { entry = name + "?" + param }
+    return push_screen(nav, entry)
+}
+
+// route_name extracts the route name from a navigation entry.
+public func route_name(entry) {
+    let i = 0
+    while (i < len(entry)) {
+        if entry[i] == "?" { return substring_to(entry, i) }
+        i = i + 1
+    }
+    return entry
+}
+
+// substring_to returns the prefix of a string before an index.
+public func substring_to(text, index) {
+    let out = ""
+    let i = 0
+    while (i < index) {
+        out = out + text[i]
+        i = i + 1
+    }
+    return out
+}
+
+// route_param extracts a route parameter or "".
+public func route_param(entry) {
+    let i = 0
+    while (i < len(entry)) {
+        if entry[i] == "?" {
+            let out = ""
+            let j = i + 1
+            while (j < len(entry)) {
+                out = out + entry[j]
+                j = j + 1
+            }
+            return out
+        }
+        i = i + 1
+    }
+    return ""
+}
+
+// new_nav_events creates an empty navigation event log.
+public func new_nav_events() {
+    return []
+}
+
+// nav_event appends a navigation event.
+public func nav_event(events, kind, detail) {
+    let out = events
+    out = push(out, kind)
+    out = push(out, detail)
+    return out
+}
+
+// nav_event_count returns the number of events.
+public func nav_event_count(events) { return len(events) / 2 }
+
+// new_screen_state creates a screen state model.
+public func new_screen_state(name) {
+    let s = []
+    s = push(s, name)
+    s = push(s, "created")
+    return s
+}
+
+// set_screen_state records a screen state.
+public func set_screen_state(screen, state) {
+    let out = []
+    out = push(out, screen[0])
+    out = push(out, state)
+    return out
+}
+
+// screen_state returns a screen state.
+public func screen_state(screen) { return screen[1] }
+
+// new_device_service declares a device service interface.
+public func new_device_service(name, capabilities) {
+    let s = []
+    s = push(s, name)
+    s = push(s, capabilities)
+    return s
+}
+
+// device_supports reports whether a capability is advertised.
+public func device_supports(service, capability) {
+    return contains(service[1], capability)
+}
+
+// camera_contract documents the camera interface.
+public func camera_contract() { return "device.camera.capture()" }
+
+// location_contract documents the location interface.
+public func location_contract() { return "device.location.current()" }
+
+// notification_contract documents the notification interface.
+public func notification_contract() { return "device.notify(title,message)" }
+
+// permission_contract documents the permission interface.
+public func permission_contract() { return "device.permission.request(name)" }
+
+// storage_contract documents secure storage.
+public func storage_contract() { return "device.secure_storage.read/write" }
+
+// background_contract documents background tasks.
+public func background_contract() { return "device.background.schedule(task)" }
+
+// network_status_contract documents network status.
+public func network_status_contract() { return "device.network.status()" }
+
+// new_permissions creates a permission state store.
+public func new_permissions() {
+    return []
+}
+
+// grant_permission records a granted permission.
+public func grant_permission(permissions, name) {
+    return set_permission(permissions, name, true)
+}
+
+// deny_permission records a denied permission.
+public func deny_permission(permissions, name) {
+    return set_permission(permissions, name, false)
+}
+
+// set_permission records a permission decision.
+public func set_permission(permissions, name, granted) {
+    let out = []
+    out = push(out, name)
+    out = push(out, granted)
+    let i = 0
+    while (i < len(permissions)) {
+        if permissions[i] == name {
+            i = i + 2
+        } else {
+            out = push(out, permissions[i])
+            out = push(out, permissions[i + 1])
+            i = i + 2
+        }
+    }
+    out = push(out, name)
+    out = push(out, granted)
+    return out
+}
+
+// is_granted reports whether a permission was granted.
+public func is_granted(permissions, name) {
+    let i = 0
+    while (i < len(permissions)) {
+        if permissions[i] == name { return permissions[i + 1] }
+        i = i + 2
+    }
+    return false
+}
+
+// new_sync_state creates a synchronization state model.
+public func new_sync_state() {
+    let s = []
+    s = push(s, "online")
+    s = push(s, "idle")
+    return s
+}
+
+// set_offline records offline state.
+public func set_offline(state) {
+    let out = []
+    out = push(out, "offline")
+    out = push(out, state[1])
+    return out
+}
+
+// set_online records online state.
+public func set_online(state) {
+    let out = []
+    out = push(out, "online")
+    out = push(out, state[1])
+    return out
+}
+
+// is_offline reports whether the model is offline.
+public func is_offline(state) { return state[0] == "offline" }
+
+// new_changeset creates a change-set model.
+public func new_changeset(id) {
+    let c = []
+    c = push(c, id)
+    return c
+}
+
+// add_change records a change id.
+public func add_change(changeset, id) { return push(changeset, id) }
+
+// change_count returns the number of recorded changes.
+public func change_count(changeset) { return len(changeset) - 1 }
+
+// new_conflict creates a synchronization conflict model.
+public func new_conflict(id, reason) {
+    let c = []
+    c = push(c, id)
+    c = push(c, reason)
+    return c
+}
+
+// sync_policy creates a synchronization policy.
+public func sync_policy(name, retry) {
+    let p = []
+    p = push(p, name)
+    p = push(p, retry)
+    return p
+}
+
+// policy_retry returns the retry count of a policy.
+public func policy_retry(policy) { return policy[1] }
+
+// new_platform declares platform capability metadata.
+public func new_platform(name, version, features) {
+    let p = []
+    p = push(p, name)
+    p = push(p, version)
+    p = push(p, features)
+    return p
+}
+
+// platform_supports reports whether a platform feature is advertised.
+public func platform_supports(platform, feature) {
+    return contains(platform[2], feature)
+}
+
+// android_contract documents Android qualification.
+public func android_contract() { return "android.sdk.build_and_run" }
+
+// ios_contract documents iOS qualification.
+public func ios_contract() { return "ios.xcode.build_and_run" }
+
+// ui_screen_contract documents Mobile to UI integration.
+public func ui_screen_contract() { return "ui.screen.compose(screen,components)" }
